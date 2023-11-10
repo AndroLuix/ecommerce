@@ -1,11 +1,12 @@
 <?php 
 components('header');
 ?>
-    
-<form class="container-sm mt-5">
+<form class="container-sm mt-5 p-3 d-grid justify-content-center ">
+
+  <div class="border border-primary rounded p-5">
   <!-- Email input -->
-  <div class="form-outline mb-4">
-    <input type="email" id="form2Example1" class="form-control" />
+  <div class="form-outline mb-4 ">
+    <input type="email" id="form2Example1" class="form-control  " />
     <label class="form-label" for="form2Example1">Email address</label>
   </div>
 
@@ -32,7 +33,9 @@ components('header');
   </div>
 
   <!-- Submit button -->
-  <button type="button" class="btn btn-primary btn-block mb-4">Sign in</button>
+  <div class="d-grid gap-2">
+  <button class="btn btn-primary m-5" type="button">Sign In</button>
+  </div>
 
   <!-- Register buttons -->
   <div class="text-center">
@@ -50,11 +53,15 @@ components('header');
       <i class="fab fa-twitter"></i>
     </button>
 
-    <button type="button" class="btn btn-link btn-floating mx-1">
+    <button type="button" class="btn btn-link btn-floating conatiner">
       <i class="fab fa-github"></i>
     </button>
   </div>
+
+  </div>
 </form>
+
+  
 
 <?php 
  components('footer');
