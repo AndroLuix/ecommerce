@@ -1,7 +1,8 @@
 <?php
 
 $request = $_SERVER['REQUEST_URI'];
-$requestWithoutPrefix = str_replace('/ecommerce/', '', $request);
+echo $request;
+$requestWithoutPrefix = str_replace('/', '', $request);
 
 function INC_($class){
     return include __DIR__.'/inc/'.$class.".php";
@@ -23,6 +24,10 @@ switch ($requestWithoutPrefix) {
     case 'dashboard':
         require view('home/dashboard');
         break;
+     case 'register':
+        require view('auth/register'); break;
+    case 'register-seller':
+    require view('auth/register-seller'); break;
 }
 
 

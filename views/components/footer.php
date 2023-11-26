@@ -7,7 +7,7 @@
       <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">FAQs</a></li>
       <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">About</a></li>
     </ul>
-    <p class="text-center text-muted">&copy; 2023 AndroLuix, Inc</p>
+    <p class="text-center text-muted">&copy; 2023 Iadicola Luigi, Inc</p>
   </footer>
 </div>
 

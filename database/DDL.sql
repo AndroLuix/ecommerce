@@ -1,17 +1,17 @@
 
-CREATE SCHEMA ecommerce;
+CREATE SCHEMA IF NOT EXISTS ecommerce;
 USE ecommerce;
 
 /*------------------------
-    USER: 
+    USER:
     1. DATA USER
     2. SELLER OPTION
-    3. TOKEN 
+    3. TOKEN
     4. ACTIVITY LOG
  ------------------------*/
 
 
-CREATE TABLE user
+CREATE TABLE IF NOT EXISTS user
 (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name varchar(30) NOT NULL,
@@ -19,16 +19,17 @@ CREATE TABLE user
     birthdate DATE NULL,
     email VARCHAR(30) UNIQUE NOT NULL,
     tel INT NULL,
-    password VARCHAR NOT NULL,
+    password VARCHAR (255) NOT NULL,
     role ENUM('customer','seller') DEFAULT 'customer' NOT NULL -- user role
 );
 
-CREATE TABLE seller(
-    user_id INT PRIMARY KEY,
-    brand VARCHAR(50) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS seller(
+                       user_id INT PRIMARY KEY,
+                       brand VARCHAR(50) NOT NULL,
+                       FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );
-CREATE TABLE user_tokens
+
+CREATE TABLE IF NOT EXISTS user_tokens
 (
     id               INT AUTO_INCREMENT PRIMARY KEY,
     token            VARCHAR(255) NOT NULL,
@@ -38,7 +39,7 @@ CREATE TABLE user_tokens
         FOREIGN KEY (user_id)
             REFERENCES user (id) ON DELETE CASCADE
 );
-CREATE TABLE activity_log
+CREATE TABLE IF NOT EXISTS activity_log
 (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -54,8 +55,12 @@ CREATE TABLE activity_log
         2 CATEGORY
         3. PRODUCT REVIEW
  ------------------------------*/
-
-CREATE TABLE product
+CREATE TABLE IF NOT EXISTS  category
+(
+    id INT AUTO_INCREMENT PRIMARY KEY ,
+    name_category VARCHAR(20) NULL
+);
+CREATE TABLE IF NOT EXISTS product
 (
     id INT AUTO_INCREMENT PRIMARY KEY,
     seller_id INT NOT NULL, -- reference : seller table
@@ -67,24 +72,20 @@ CREATE TABLE product
     image_filename VARCHAR(255) NOT NULL,
     FOREIGN KEY (category_id) REFERENCES category(id)
         ON DELETE SET NULL,
-   -- if you delete a category, it's set null
-   FOREIGN KEY (seller_id) references seller(user_id) ON DELETE CASCADE
+    -- if you delete a category, it's set null
+    FOREIGN KEY (seller_id) references seller(user_id) ON DELETE CASCADE
 
 );
 
-CREATE TABLE category
-(
-    id INT AUTO_INCREMENT PRIMARY KEY ,
-    name_category VARCHAR(20) NULL
-);
-CREATE TABLE product_review(
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  id_product INT NOT NULL,
-  id_user INT NOT NULL,
-  rating INT NOT NULL,
-  review_text VARCHAR(255) NULL,
-  FOREIGN KEY (id_product) REFERENCES product(id),
-  FOREIGN KEY (id_user) REFERENCES user(id)
+
+CREATE TABLE IF NOT EXISTS  product_review(
+   id INT PRIMARY KEY AUTO_INCREMENT,
+   id_product INT NOT NULL,
+   id_user INT NOT NULL,
+   rating INT NOT NULL,
+   review_text VARCHAR(255) NULL,
+   FOREIGN KEY (id_product) REFERENCES product(id),
+   FOREIGN KEY (id_user) REFERENCES user(id)
 );
 
 
@@ -97,26 +98,27 @@ CREATE TABLE product_review(
     4. TRANSITION DATA
  ------------------------*/
 
-CREATE TABLE order
+CREATE TABLE IF NOT EXISTS  order_table
 (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     order_date DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
-);
-
-CREATE TABLE order_details(
-    id INT AUTO_INCREMENT PRIMARY KEY ,
-    order_id INT NOT NULL,
-    product_id INT NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (order_id) REFERENCES order(id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) references product(id) ON DELETE CASCADE,
 
 );
 
+CREATE TABLE IF NOT EXISTS  order_details(
+                              id INT AUTO_INCREMENT PRIMARY KEY ,
+                              order_id INT NOT NULL,
+                              product_id INT NOT NULL,
+                              price DECIMAL(10,2) NOT NULL,
+                              FOREIGN KEY (order_id) REFERENCES order_table(id) ON DELETE CASCADE,
+                              FOREIGN KEY (product_id) references product(id) ON DELETE CASCADE
 
-CREATE TABLE shipping_adress
+);
+
+
+CREATE TABLE IF NOT EXISTS  shipping_adress
 (
     id INT AUTO_INCREMENT PRIMARY KEY ,
     user_id INT NOT NULL,
@@ -127,7 +129,7 @@ CREATE TABLE shipping_adress
     zip_code VARCHAR(10) NOT NULL, -- The length of the zip code is different for each state
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );
-CREATE TABLE transition
+CREATE TABLE IF NOT EXISTS  transition
 (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -136,7 +138,7 @@ CREATE TABLE transition
     payment_method VARCHAR(50) NOT NULL,
     amount DECIMAL (10,2) NOT NULL,
     FOREIGN KEY (user_id) references user(id) ON DELETE CASCADE,
-    FOREIGN KEY (order_id) REFERENCES order(id) ON DELETE CASCADE
+    FOREIGN KEY (order_id) REFERENCES order_table(id) ON DELETE CASCADE
 );
 
 
@@ -146,32 +148,32 @@ CREATE TABLE transition
         2. COUPON FOR CATEGORY
  ---------------------------------*/
 
-CREATE TABLE coupon(
-   id int AUTO_INCREMENT PRIMARY KEY ,
-   code VARCHAR(15) UNIQUE NOT NULL,
-   discount_amount DECIMAL(5,2) NOT NULL
+CREATE TABLE IF NOT EXISTS  coupon(
+                       id int AUTO_INCREMENT PRIMARY KEY ,
+                       code VARCHAR(15) UNIQUE NOT NULL,
+                       discount_amount DECIMAL(5,2) NOT NULL
 );
 
-CREATE TABLE coupon_category(
-    coupon_id INT NOT NULL,
-    category_id INT NOT NULL,
-    PRIMARY KEY (coupon_id, category_id),
-    FOREIGN KEY (category_id) REFERENCES coupon(id) ON DELETE CASCADE ,
-    FOREIGN KEY (coupon_id) REFERENCES  category(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS  coupon_category(
+                                coupon_id INT NOT NULL,
+                                category_id INT NOT NULL,
+                                PRIMARY KEY (coupon_id, category_id),
+                                FOREIGN KEY (category_id) REFERENCES coupon(id) ON DELETE CASCADE ,
+                                FOREIGN KEY (coupon_id) REFERENCES  category(id) ON DELETE CASCADE
 );
 
- /*------------------------------
+/*------------------------------
 
-        PROCEDURE AND TRIGGER 
-   
-  -------------------------------*/
+       PROCEDURE AND TRIGGER
+
+ -------------------------------*/
 
 
- /*------------------------------
+/*------------------------------
 
-        EXCEPTION 
-   
-  -------------------------------*/
+       EXCEPTION
+
+ -------------------------------*/
 
 DELIMITER //
 
@@ -192,11 +194,11 @@ BEGIN
     COMMIT;
     SELECT 'Entering user success';
 END //
- /*------------------------------
+/*-------------------------------
 
-   UPDATE/DELETE NAME CATEGORY
+  UPDATE/DELETE NAME CATEGORY
 
-  -------------------------------*/
+ -------------------------------*/
 CREATE TRIGGER after_update_category
     AFTER UPDATE
     ON category FOR EACH ROW
@@ -218,7 +220,7 @@ CREATE TRIGGER before_update_product
     BEFORE UPDATE
     ON product FOR EACH ROW
 BEGIN
-    SET NEW.name_category = (SELECT name_category FROM category WHERE id = NEW.category_id);
+    SET NEW.category = (SELECT name_category FROM category WHERE id = NEW.category_id);
 END;
 //
 
