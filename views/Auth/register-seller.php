@@ -4,6 +4,7 @@ components('header');
 <title>Register as a Seller</title>
 <div class="container text-center mt-4">
   <div>
+    
     <h2>Register as a Seller</h2>
     <a href="register"> Register as a customer <a>
         <form class=" d-inline justify-content-center ">

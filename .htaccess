@@ -1,10 +1,13 @@
+# Rewrite non-existing pages to their .php version
 RewriteEngine On
-RewriteBase /e-commerce/
+RewriteBase /ecommerce/
 
-# Rimuovi il prefisso '/ecommerce/' dal percorso prima di reindirizzare
-RewriteCond %{REQUEST_URI} !^/ecommerce/
-RewriteRule ^(.+)$ /ecommerce/$1 [L,NC]
-
-RewriteCond %{REQUEST_FILENAME} !-d
+# Redirect all requests to index.php
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.+)$ index.php [QSA,L]
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
+
+# Redirect URLs ending with .php to the non-php version
+RewriteCond %{THE_REQUEST} \s/([^.]*)\.php/?\s [NC]
+RewriteRule ^  %1? [R=301,L]
+
