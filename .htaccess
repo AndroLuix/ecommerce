@@ -1,6 +1,9 @@
 # Rewrite non-existing pages to their .php version
 RewriteEngine On
-RewriteBase /ecommerce/
+RewriteBase /
+#if you use XAMPP or other, ad u use localhost, and your url is localhost/ecommerce, use this: 
+#uncomment 
+#RewriteBase /ecommerce/
 
 # Redirect all requests to index.php
 RewriteCond %{REQUEST_FILENAME} !-f

@@ -2,36 +2,12 @@
 
 define('PATH_INDEX',__DIR__);
 
-$request = $_SERVER['REQUEST_URI'];
-echo $request;
-
-$requestWithoutPrefix = str_replace("/ecommerce", "", $request);
-echo '<br>nu ' . $requestWithoutPrefix;
-
-function INC_($class){
-    return include __DIR__.'/inc/'.$class.".php";
-}
-
-INC_('init');
-INC_('router');
-callPhpFile('conn');
-routeRequest($requestWithoutPrefix);  // Chiamiamo la funzione di routing con il parametro necessario
+require_once __DIR__ . '/vendor/autoload.php';
 
 
-// FILE PER LE ROOT
- //require __DIR__.'/router.php';
+//i moduli di inizializzazione (non cambiare mai l'ordine)
+include 'inc/config.php'; //file con all'interno le definizioni
 
-// connessione al DB
+include 'inc/init.php';
+include 'router.php';
 
-
-
- // FILE PER LA CONNESSIONE
- //require __DIR__.'';
-
-function view($root) {
-    return __DIR__ . '/views/' . $root . '.php';
-}
-
-echo '<br>'.__DIR__ . "<br>";
-
-echo '<BR>'.view("auth/login");

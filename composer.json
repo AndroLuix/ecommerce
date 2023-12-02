@@ -1,0 +1,15 @@
+{
+    
+    
+    "description": "Una breve descrizione del tuo progetto",
+    "name": "vendo-name/ecommerce",
+    "license": "proprietary",
+    
+    "autoload": {
+        "psr-4": {
+            "ManagementDatabase\\": "classes/ManagementDatabase",
+            "Base\\": "classes/base",
+            "CreateDataBase\\": "classes/createdatabase"
+        }
+    }
+}
