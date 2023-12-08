@@ -6,7 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'ManagementDatabase\\' => array($baseDir . '/classes/ManagementDatabase'),
-    'CreateDataBase\\' => array($baseDir . '/classes/createdatabase'),
-    'Base\\' => array($baseDir . '/classes/base'),
+    'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
+    'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),
+    'Database\\' => array($baseDir . '/classes/database'),
 );

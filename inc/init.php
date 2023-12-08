@@ -31,9 +31,18 @@ function includeClass($class){
 function view($root) {
     return PATH_INDEX . '/views/' . $root . '.php';
 }
+function test($root){
+    return PATH_INDEX.'/test/'.$root.'.php';
+}
 
-includeClass('database/ManagementDatabase');
+//includeClass('database/ManagementDatabase');
+$loader =
+require PATH_INDEX. '/vendor/autoload.php';
+$loader->add('Database', __DIR__.'/classes/database/');
 
-use Management\ManagementDatabase  ;
 
+// Usa il namespace completo della tua classe
+use Database\ManagementDatabase;
+
+// Crea un'istanza della tua classe
 $dbInstance = new ManagementDatabase();

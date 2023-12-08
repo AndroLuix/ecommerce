@@ -1,44 +1,59 @@
 <?php
+/***
+ * 
+ * STRUTTURA BASE ORM (Object Relational Mapping)
+ */
+namespace Database;
 
-namespace Management; 
-
-use Base\Base;
+use Collator;
 use mysqli;
 
 use function PHPSTORM_META\type;
 
-class ManagementDatabase extends Base
+class ManagementDatabase 
 {
-    private $mysqli;
-    public $pdo;
+
+    private $conn;
 
 
     public function __construct()
     {
-
-        global $mysqli;
-        global $base;
-        $this->mysqli = new \mysqli(HOSTNAME, USERNAME, PASSWORD);
-
-      
-       
-
-        // Check connection
-        if ($this->mysqli->connect_error) {
-            require view('errors/server-error-500');
-            exit;
-        }else{
-            echo '<br>connect success!';
+        $this->conn = new mysqli(HOSTNAME, USERNAME, PASSWORD, DATABASE);
+        if ($this->conn->connect_error) {
+            die('<br>Connect Error (' . $this->conn->connect_errno . ') ' . $this->conn->connect_error);
+        } else {
+            echo "\n Connected to the database!\n";
         }
+
     }
 
-    protected function select($query)
+    /**
+     * FUNZIONI UTILI:
+     */
+    public function esc($input){
+        return mysqli_real_escape_string($this->conn, $input);
+    }
+
+
+
+    /**
+     *   -----------------------
+     *          SELECT
+     *   -----------------------
+     * 
+     * @param $query - verrà inserita la query all'interno di questa funzione
+     * 
+     *  In questa funzione si possono fare query autonome per query complesse o semplici, join, viste, UNION, etc
+     * 
+     */
+
+    public function select($query)
     {
         //variabile con all'interno al query
-        $result = $this->mysqli->query($query);
+        $result = $this->conn->query($query);
 
         if (!$result) {
-            die('Execute query error, because: ' . print_r($this->mysqli->error_list, true));
+            die('Execute query error, because: ' . print_r($this->conn->error_list, true));
         }
 
         return $result;
@@ -56,39 +71,20 @@ class ManagementDatabase extends Base
      * @return array - Ritrona un array associativo con tutte le righe recuperate dalla query 
      */
 
-    protected function all($table, $columns = array())
+    protected function selectAll($table, $columns = array())
     {
-        //Istanziamento oggetto della classe Base
+        $instance = ' SELECT * ';
+        $colNames = '';
 
-        //funzione per la gestione della query: 
-        $query = $this->buildSelectQuery($table,$columns);
-        
-        // Dopo aver compilato la query, inserico la variabile
-        // all'interno di questo funzione.
-        return $resutlArray = $this->executeQuery($query);
-
-    }
-
-    protected  function find($table, $columns = array(), $id) {
-        $cols = '';
-        
-        //Unisco tutte le colonne messe nella string $cols e proteggeremi da SQL innjection
-        foreach($columns as $colName){
-            $colName = Base::esc($colName);
-            $cols .= ' '. $colName .', ';
+        foreach($columns as $col){
+            $colNames .= " $col ,";
         }
-     
-        //tolgo le virgole
-        $cols = substr($cols, 0, -1);
 
-        // protezione SQL injection 
-        $id = Base::esc($id);
+        $colNames = substr($colNames, 0, -1);
 
-        //costruzione della query: 
-        $query = 'SELECT '. $cols . ' FROM '. $table .' WHERE ID '. $id;
+        $query = $instance.$colNames;
 
-        //esecuzione
-        $resQuery = mysqli_query($this->mysqli, $query);
+        $resQuery = mysqli_query($this->conn, $query);
 
         //restituisco un array associativo
         $resutlArray = mysqli_fetch_array($resQuery);
@@ -96,21 +92,94 @@ class ManagementDatabase extends Base
         // libero lo spazio dalla memory
         mysqli_free_result($resQuery);
         
+        //ritorno un array
         return $resutlArray;
+    
 
     }
 
-    protected function delete($table, $id){
+
+
+
+
+
+
+
+
+
+    /**
+     *   -----------------------
+     *          FIND BY ID
+     *   -----------------------
+     * 
+     * @param $table - verrà inserito il nome della tabella per specificare l'entità
+     * 
+     * @param $columns (array) - un array delle colonne da selezionare
+     * 
+     * @param $Id - verrà inserito l'id per precisare l'elemento da mostrare
+     * 
+     * @return ' SELECT $nome, $cognome, $eta FROM $tab_persona WHERE $id
+     * 
+    
+     * 
+     */
+    protected  function findById($table, $columns = array(), $id) {
+        $cols = '';
+        
+        //Unisco tutte le colonne messe nella string $cols e proteggeremi da SQL innjection
+        foreach($columns as $colName){
+            $colName = $this->esc($colName);
+            $cols .= ' '. $colName .', ';
+        }
+     
+        //tolgo le virgole
+        $cols = substr($cols, 0, -1);
+
+        // protezione SQL injection 
+        $id = $this->esc($id);
+
+        //costruzione della query: 
+        $query = 'SELECT '. $cols . ' FROM '. $table .' WHERE ID '. $id;
+
+        //esecuzione
+        $resQuery = mysqli_query($this->conn, $query);
+
+        //restituisco un array associativo
+        $resutlArray = mysqli_fetch_array($resQuery);
+
+        // libero lo spazio dalla memory
+        mysqli_free_result($resQuery);
+        
+        //ritorno un array
+        return $resutlArray;
+    }
+
+
+    
+    /**
+     *   -----------------------
+     *          DELETE
+     *   ----------------------
+     * 
+     * @param $table - verrà inserito il nome della tabella
+     * 
+     * @param $Id - verrà inserito l'id per poter selezionare l'elemento da eliminare
+     * 
+    
+     * 
+     */
+
+    protected function deleteWhereId($table, $id){
 
         $query = " DELETE FROM $table WHERE id = ?";
 
-        // esc per l'di
-        $id = self::esc($id);
-
-        $table = self::esc($table);
+        // esc per l'di se non è un INT
+      
+        $id = $this->esc($id); 
+        $table = $this->esc($table);
 
         //preparazione della query
-        $stmt = $this->mysqli->prepare($query);
+        $stmt = $this->conn->prepare($query);
 
         //richiesta della stringa
         $stmt->bind_param('ss', $id , $table);
@@ -128,37 +197,106 @@ class ManagementDatabase extends Base
 
     }
 
-    protected function update($table,$columns = array(), $id){
+    
+    /**
+     *   -----------------------
+     *      UPDATE WHERE VALUE
+     *   ----------------------
+     * 
+     * @param $table - verrà inserito il nome della tabella
+     * 
+     * @param $columns = array()  - verra inserito un array con chiave valore, quindi un array associativo
+     * 
+     *  ESEMPIO 
+     *  colonne [
+     *   nome => mario,
+     *   cognome => rossi, 
+     *   età => 29,
+     *   
+     * ]
+     * 
+     * @param $val - valore per identificare il record
+     */
+
+    protected function updateWhereVal($table, $columns = array(), $val){
         if(empty($columns)){
-           echo 'Select a column name';
-           return; //necessario per evitare che si compili il resto del codice
+            echo 'Select one column name and value';
+            return; //necessario per evitare che si compili il resto del codice
+         }elseif(empty($id)){
+             echo 'Select value for seach';
+         }
+
+         $colSelected = '';
+        $arrayAssoc = array();
+
+          //si esegue quindi un ciclo  che riempie la stringa colmnset
+        foreach($columns as $colName => $colValue){
+            $colSelected.= "$colName = ? , ";
+            $arrayAssoc[] = $colValue;
         }
 
-        //qui verranno messe le colonne selezionate dal developer
+        $colSelected = rtrim($colSelected,', '); //rimuovo l'ultima virgola
+
+
+ 
+        
+    }
+
+    /**
+     *   -----------------------
+     *      UPDATE WHERE ID
+     *   ----------------------
+     * 
+     * @param $table - verrà inserito il nome della tabella
+     * 
+     * @param $columns = array()  - verra inserito un array con chiave valore, quindi un array associativo
+     * 
+     *  ESEMPIO 
+     *  colonne [
+     *   nome => mario,
+     *   cognome => rossi, 
+     *   età => 29,
+     * ]
+     * 
+     * @param $id - l'Id come identificativo per selezonare il record da modificare
+     * 
+
+     */
+
+    protected function updateWhereId($table, $columns = array(), $id){
+        if(empty($columns)){
+           echo '<br>Select one column name and value';
+           return; //necessario per evitare che si compili il resto del codice
+        }elseif(empty($id)){
+            echo '<br>Select id';
+            return;
+        }
+
+        //qui verranno messe le colonne selezionate 
         $colSelected = '';
         //qui verranno inseriti i valori dinamicamente nomeTabella => valore
-        $params = array();
+        $arrayAssoc = array();
 
         //si esegue quindi un ciclo  che riempie la stringa colmnset
         foreach($columns as $colName => $colValue){
             $colSelected.= "$colName = ? , ";
-            $params[] = $colValue;
+            $arrayAssoc[] = $colValue;
         }
 
         $colSelected = rtrim($colSelected,', ');
 
-        //aggiungimento id come ultimo parametro
-        $params[] =  $id;
+        //aggiungimento id 
+        $arrayAssoc[] =  $id;
 
         $query = " UPDATE $table SET $colSelected WHERE id = ?";
 
-        foreach($params as &$param){
-            $param = self::esc($param);
+        foreach($arrayAssoc as &$param){
+            $param = $this->esc($param);
         }
         unset($param);
 
         // preparazione statement
-        $stmt = $this->mysqli->prepare($query);
+        $stmt = $this->conn->prepare($query);
 
         /**
          * 
@@ -167,7 +305,7 @@ class ManagementDatabase extends Base
          */
 
         // calcolo del numero totale dei parametri:
-        $numParams = count($params);
+        $numParams = count($arrayAssoc);
 
         //inizializzare una stringa vuota per i tipi
         $types = '';
@@ -183,7 +321,6 @@ class ManagementDatabase extends Base
                 $types .=' , ';
             }
         }
-
         /***
          * bindParam
          */
@@ -198,9 +335,9 @@ class ManagementDatabase extends Base
          foreach($allTypesArray as $type){
             if($type === 's'){
                 //ecape solo se la tipologia è una stringa
-                $blindParams[] = self::esc(array_shift($params));
+                $blindParams[] = $this->esc(array_shift($arrayAssoc));
             }else{
-                $blindParams[]= array_shift($params);
+                $blindParams[]= array_shift($arrayAssoc);
             }
             
          }
@@ -221,35 +358,42 @@ class ManagementDatabase extends Base
          return $rowsAffected;
     }
 
-    //inserimento del database di nuovo record
-    protected function insert($table, $columns = array()){
+    //inserimento  di nuovi records
+    public function insert($table, $columns = array()){
         //stringa contenente tutte le colonne
         $strCol = '';
         //stringa con i valori da inserire nelle relative colonne
         $strValues = '';
         foreach($columns as $colName => $colValue){
 
-            $colName = self::esc($colName);
-            $$colValue = self::esc($colValue);
+            $colName = $this->esc($colName);
+            $$colValue = $this->esc($colValue);
 
 
-            $strCol .= ' '. $colName.' , ';
-            $strValues .= ' '. $colValue.' ,' ;
+            $strCol .= ' '. $colName.' ,';
+            $strValues .= ' \''. $colValue.'\' ,' ;
         }
 
         //rimozione ultima virgola per le colonne
         $strCol = rtrim($strCol,' ,');
+
+        
     
         // rimozione ultima virgola per i valori da inserire
         $strValues = rtrim($strValues,' ,');
 
         $query = " INSERT INTO $table ($strCol) VALUES ($strValues)";
+        echo $query;
 
-        if(mysqli_query($this->mysqli, $query)){
-            //genera un auto increment
-            $lastId= mysqli_insert_id($this->mysqli);
-            return $lastId;
-        }else{
+        $result = mysqli_query($this->conn, $query);
+
+
+        if ($result) {
+            // Restituisci l'ID del nuovo record
+            return mysqli_insert_id($this->conn);
+        } else {
+            // Restituisci un valore che indica l'errore
+            echo  mysqli_error($this->conn);
             return -1;
         }
 

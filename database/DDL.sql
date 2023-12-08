@@ -23,6 +23,11 @@ CREATE TABLE IF NOT EXISTS user
     role ENUM('customer','seller') DEFAULT 'customer' NOT NULL -- user role
 );
 
+
+-- Aggiorna la nuova colonna con le date nel formato 'DD/MM/YYYY'
+UPDATE user
+SET birthdate = STR_TO_DATE(birthdate, '%d/%m/%Y');
+
 CREATE TABLE IF NOT EXISTS seller(
                        user_id INT PRIMARY KEY,
                        brand VARCHAR(50) NOT NULL,
